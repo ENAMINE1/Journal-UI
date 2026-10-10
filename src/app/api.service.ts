@@ -17,7 +17,7 @@ export interface JournalResponse {
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:8081';
+  private readonly baseUrl = 'https://seven-yea-spec-economy.trycloudflare.com/journal';
 
   login(username: string, password: string): Observable<{ accessToken: string }> {
     return this.http.post<{ accessToken: string }>(`${this.baseUrl}/api/auth/login`, { username, password }).pipe(catchError(this.handleError));
