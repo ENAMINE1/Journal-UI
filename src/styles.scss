@@ -61,3 +61,22 @@ html[data-theme='peach'] .note-card:hover, html[data-theme='peach'] .note-card.a
 html[data-theme='peach'] .search-box { background: #f9e4d4; }
 html[data-theme='peach'] .title-editor, html[data-theme='peach'] .content-editor, html[data-theme='peach'] .search-box input { color: #38251f; }
 html[data-theme='peach'] .markdown-preview pre { background: #5b4035; border-color: #9b6a53; }
+
+html[data-theme] .app-shell { grid-template-columns: 220px 320px minmax(0, 1fr); }
+html[data-theme] .editor-column { padding-right: clamp(28px, 5vw, 88px); padding-left: clamp(28px, 5vw, 88px); }
+html[data-theme] .editor { width: min(1080px, 100%); margin: 0 auto; }
+html[data-theme] .markdown-preview { color: inherit; }
+html[data-theme] .markdown-preview p,
+html[data-theme] .markdown-preview li { color: inherit; }
+html[data-theme] .markdown-preview a { color: #4c9878; }
+html[data-theme='midnight'] .markdown-preview { color: #e8eef3; }
+html[data-theme='midnight'] .markdown-preview code { background: #354454; color: #dbeafe; }
+html[data-theme='midnight'] .markdown-preview details { border-color: #53677b; background: #303e4d; }
+html[data-theme='midnight'] .markdown-preview summary { color: #a8e6c0; }
+html[data-theme='midnight'] .markdown-preview .callout { background: #30483f; color: #d9f4e3; }
+html[data-theme='midnight'] .table-of-contents { border-color: #43576a; color: #a9b8c7; }
+html[data-theme='midnight'] .table-of-contents a { color: #c4d1dc; }
+html[data-theme='peach'] .markdown-preview { color: #38251f; }
+html[data-theme='peach'] .markdown-preview details { border-color: #e8cdbb; background: #fff0e5; }
+html[data-theme='peach'] .markdown-preview .callout { background: #fbe5d5; color: #633526; }
+.table-of-contents { display: flex; align-items: baseline; gap: 14px; max-width: 760px; margin: 8px auto 10px; padding: 10px 0; border-top: 1px solid #e3e5de; border-bottom: 1px solid #e3e5de; color: #71807a; font: 10px var(--app-font-mono, 'DM Mono', monospace); overflow-x: auto; white-space: nowrap; }.table-of-contents span { color: #315c4c; text-transform: uppercase; letter-spacing: .06em; }.table-of-contents a { color: #71807a; text-decoration: none; }.table-of-contents a:hover { color: #315c4c; }
