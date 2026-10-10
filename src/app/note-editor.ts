@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output, signal } from '@angular/core';
 import { marked } from 'marked';
 import { markedHighlight } from 'marked-highlight';
 import hljs from 'highlight.js/lib/core';
@@ -62,13 +62,39 @@ export class NoteEditorComponent {
   get renderedContent(): string {
     const source = this.content || '_Start writing to see the rendered note._';
     const detailBlocks: string[] = [];
-    const withoutDetails = source.replace(/::: details(?:\s+([^\n]+))?\n([\s\S]*?)\n:::/g, (_match, title = 'Details', body) => {
+    const callouts: string[] = [];
+    const withoutDetails = source
+      .replace(/::: (note|tip|warning|danger)(?:\s+([^\n]+))?\n([\s\S]*?)\n:::/g, (_match, type, title = type, body) => {
+        const renderedBody = marked.parse(body) as string;
+        callouts.push(`<aside class="callout callout-${type}"><strong>${this.escapeHtml(title)}</strong>${renderedBody}</aside>`);
+        return `\n\nCALLOUT_BLOCK_${callouts.length - 1}\n\n`;
+      })
+      .replace(/::: details(?:\s+([^\n]+))?\n([\s\S]*?)\n:::/g, (_match, title = 'Details', body) => {
       const renderedBody = marked.parse(body) as string;
       detailBlocks.push(`<details><summary>${this.escapeHtml(title)}</summary>${renderedBody}</details>`);
       return `\n\nDETAIL_BLOCK_${detailBlocks.length - 1}\n\n`;
-    });
+      });
     const rendered = marked.parse(withoutDetails) as string;
-    return rendered.replace(/<p>DETAIL_BLOCK_(\d+)<\/p>/g, (_match, index) => detailBlocks[Number(index)]);
+    return rendered
+      .replace(/<p>DETAIL_BLOCK_(\d+)<\/p>/g, (_match, index) => detailBlocks[Number(index)])
+      .replace(/<p>CALLOUT_BLOCK_(\d+)<\/p>/g, (_match, index) => callouts[Number(index)])
+      .replace(/<pre><code([\s\S]*?)>([\s\S]*?)<\/code><\/pre>/g, '<div class="code-shell"><button type="button" class="copy-code" data-copy-code aria-label="Copy code">Copy</button><pre><code$1>$2</code></pre></div>');
+  }
+
+  get headings(): Array<{ text: string; level: number }> {
+    return [...this.content.matchAll(/^(#{1,3})\s+(.+)$/gm)].map((match) => ({ level: match[1].length, text: match[2].trim() }));
+  }
+
+  @HostListener('click', ['$event'])
+  protected copyCode(event: Event): void {
+    const target = event.target as HTMLElement;
+    const button = target.closest('[data-copy-code]') as HTMLButtonElement | null;
+    if (!button) return;
+    const code = button.parentElement?.querySelector('code')?.textContent || '';
+    navigator.clipboard.writeText(code).then(() => {
+      button.textContent = 'Copied';
+      setTimeout(() => button.textContent = 'Copy', 1400);
+    });
   }
 
   formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(value)); }

@@ -34,6 +34,10 @@ button, input { font: inherit; }
 .markdown-preview .hljs-name { color: #ffab70; }
 .markdown-preview pre { margin: 18px 0; padding: 18px; overflow: auto; border: 1px solid #3d514a; border-radius: 10px; background: #111a18; color: #f5f7f2; box-shadow: 0 10px 24px rgba(28, 36, 34, .18); }
 .markdown-preview pre code { display: block; padding: 0; background: transparent; color: inherit; font: 13px/1.7 var(--app-font-mono, 'Fira Code', monospace); }
+.code-shell { position: relative; }.code-shell .copy-code { position: absolute; z-index: 1; top: 10px; right: 10px; padding: 5px 8px; border: 1px solid #60766d; border-radius: 4px; background: #253833; color: #dce9e2; font: 10px var(--app-font-mono, 'Fira Code', monospace); cursor: pointer; }.code-shell .copy-code:hover { background: #315c4c; }
+.markdown-preview details { margin: 18px 0; padding: 12px 16px; border: 1px solid #d8ded6; border-radius: 6px; background: rgba(255, 255, 255, .5); }
+.markdown-preview summary { cursor: pointer; color: #315c4c; font-weight: 700; }
+.markdown-preview .callout { margin: 20px 0; padding: 14px 16px; border-left: 3px solid #315c4c; border-radius: 5px; background: #e8f0ea; color: #28483b; }.markdown-preview .callout p { margin-bottom: 8px; }.markdown-preview .callout strong { display: block; margin-bottom: 5px; }.markdown-preview .callout-tip { border-color: #d69c2f; background: #fff4d9; color: #6e4d0c; }.markdown-preview .callout-warning { border-color: #d66c42; background: #fff0e8; color: #793c27; }.markdown-preview .callout-danger { border-color: #b84d62; background: #ffedf0; color: #702638; }
 
 html[data-theme='meadow'] .app-shell { background: #f7f5f0; color: #1c2422; }
 html[data-theme='meadow'] .sidebar { background: #eef2ec; }
