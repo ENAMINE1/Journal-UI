@@ -1,50 +1,12 @@
-<main class="app-shell">
-  <aside class="sidebar">
-    <div class="brand-lockup"><span class="brand-mark">FN</span><span>Field Notes</span></div>
-    <button class="new-note" type="button" (click)="startNewNote()"><span class="plus">+</span> New note</button>
-    <p class="section-label">Your desk</p>
-    <nav aria-label="Note filters">
-      @for (filter of ['All notes', 'Private', 'Shared']; track filter) {
-        <button class="nav-item" [class.active]="activeFilter() === filter" type="button" (click)="selectFilter($any(filter))">
-          <span class="nav-symbol">{{ filter === 'All notes' ? '□' : filter === 'Private' ? '◇' : '◆' }}</span>
-          <span>{{ filter }}</span>
-          @if (filter === 'All notes') { <span class="count">{{ notes().length }}</span> }
-        </button>
-      }
-    </nav>
-    <div class="sidebar-bottom">
-      <div class="account"><span class="avatar">S</span><span><strong>{{ username }}</strong><small>Personal workspace</small></span></div>
-      <button class="sign-out" type="button">Sign out</button>
-    </div>
-  </aside>
-
-  <section class="notes-column">
-    <header class="notes-header">
-      <div><p class="eyebrow">Your desk</p><h1>{{ activeFilter() }}</h1></div>
-      <button class="refresh" type="button" aria-label="Refresh notes">↻</button>
-    </header>
-    <label class="search-box"><span>⌕</span><input type="search" placeholder="Search your notes" [value]="searchTerm()" (input)="updateSearch($event)" aria-label="Search your notes"></label>
-    <div class="notes-list">
-      @for (note of visibleNotes(); track note.id) {
-        <article class="note-card" [class.active]="selectedNoteId() === note.id" (click)="selectNote(note.id)">
-          <h2>{{ note.title }}</h2><p>{{ note.content }}</p>
-          <div class="note-meta"><span>{{ note.date }}</span><span>{{ note.visibility }}</span></div>
-        </article>
-      } @empty {
-        <div class="empty-list"><span>+</span><h2>No notes here yet.</h2><p>Start with a thought worth keeping.</p></div>
-      }
-    </div>
-  </section>
-
-  <section class="editor-column">
-    <div class="editor-toolbar"><span class="save-state">Saved</span><div><button class="delete-button" type="button">Delete</button><button class="save-button" type="button">Save note</button></div></div>
-    @if (selectedNote(); as note) {
-      <article class="editor">
-        <h2>{{ note.title }}</h2>
-        <div class="editor-meta"><span>Edited {{ note.date }}</span><span class="visibility">{{ note.visibility }}</span></div>
-        <div class="editor-copy"><p>The useful part of a day is often the detail you almost forget.</p><p>{{ note.content }}</p><p>Keep this feeling close: make room before asking for clarity.</p></div>
-      </article>
-    }
-    <footer class="editor-footer"><span>42 words</span><span>Saved in your workspace</span></footer>
-  </section>
-</main>
+@if (!token()) {
+  <main class="auth-shell">
+    <section class="auth-intro"><span class="brand-mark light">FN</span><p class="eyebrow light-text">A private place to think</p><h1>Keep the useful things close.</h1><p class="intro-copy">A quiet notes desk for ideas, meeting notes, and the thoughts you want available wherever you work.</p></section>
+    <section class="auth-panel"><div class="auth-tabs"><button type="button" [class.active]="authMode() === 'login'" (click)="setAuthMode('login')">Sign in</button><button type="button" [class.active]="authMode() === 'register'" (click)="setAuthMode('register')">Create account</button></div><p class="eyebrow">{{ authMode() === 'login' ? 'Welcome back' : 'Start a fresh desk' }}</p><h2>{{ authMode() === 'login' ? 'Open your desk' : 'Make it yours' }}</h2><form (submit)="submitAuth($event)"><label>Username<input name="username" autocomplete="username" required minlength="3"></label>@if (authMode() === 'register') { <label>Email<input name="email" type="email" autocomplete="email" required></label> }<label>Password<input name="password" type="password" autocomplete="current-password" required minlength="8"></label><button class="save-button wide" type="submit">{{ loading() ? 'Working...' : authMode() === 'login' ? 'Sign in' : 'Create account' }} <span>→</span></button></form>@if (authError()) { <p class="error-message">{{ authError() }}</p> }</section>
+  </main>
+} @else {
+  <main class="app-shell">
+    <aside class="sidebar"><div class="brand-lockup"><span class="brand-mark">FN</span><span>Field Notes</span></div><button class="new-note" type="button" (click)="startNewNote()"><span class="plus">+</span> New note</button><p class="section-label">Your desk</p><nav aria-label="Note filters">@for (filter of ['All notes', 'Private', 'Shared']; track filter) {<button class="nav-item" [class.active]="activeFilter() === filter" type="button" (click)="selectFilter($any(filter))"><span class="nav-symbol">{{ filter === 'All notes' ? '□' : filter === 'Private' ? '◇' : '◆' }}</span><span>{{ filter }}</span>@if (filter === 'All notes') { <span class="count">{{ notes().length }}</span> }</button>}</nav><div class="sidebar-bottom"><div class="account"><span class="avatar">{{ username().slice(0, 1).toUpperCase() }}</span><span><strong>{{ username() }}</strong><small>Personal workspace</small></span></div><button class="sign-out" type="button" (click)="signOut()">Sign out</button></div></aside>
+    <section class="notes-column"><header class="notes-header"><div><p class="eyebrow">Your desk</p><h1>{{ activeFilter() }}</h1></div><button class="refresh" type="button" (click)="loadNotes()" aria-label="Refresh notes">↻</button></header><label class="search-box"><span>⌕</span><input type="search" placeholder="Search your notes" [value]="searchTerm()" (input)="updateSearch($event)" aria-label="Search your notes"></label><div class="notes-list">@for (note of visibleNotes(); track note.id) {<article class="note-card" [class.active]="selectedNoteId() === note.id" (click)="selectNote(note.id)"><h2>{{ note.title }}</h2><p>{{ note.content }}</p><div class="note-meta"><span>{{ formatDate(note.updatedAt) }}</span><span>{{ note.accessType === 'PUBLIC' ? 'Shared' : 'Private' }}</span></div></article>} @empty {<div class="empty-list"><span>+</span><h2>No notes here yet.</h2><p>Start with a thought worth keeping.</p></div>}</div></section>
+    <section class="editor-column"><div class="editor-toolbar"><span class="save-state">{{ isNewNote() ? 'Unsaved' : 'Saved' }}</span><div><button class="delete-button" type="button" (click)="deleteNote()">Delete</button><button class="save-button" type="button" (click)="saveNote()">Save note</button></div></div><article class="editor"><input class="title-editor" [value]="draftTitle()" (input)="updateDraft('title', $event)" placeholder="Untitled note" aria-label="Note title"><div class="editor-meta"><span>{{ selectedNote() ? 'Edited ' + formatDate(selectedNote()!.updatedAt) : 'New note' }}</span><label class="visibility">Visibility<select [value]="draftVisibility()" (change)="updateDraft('visibility', $event)"><option value="PRIVATE">Private</option><option value="PUBLIC">Shared</option></select></label></div><textarea class="content-editor" [value]="draftContent()" (input)="updateDraft('content', $event)" placeholder="Start writing..." aria-label="Note content"></textarea></article><footer class="editor-footer"><span>Notes are saved to your workspace</span>@if (authError()) { <span class="error-message">{{ authError() }}</span> }</footer></section>
+  </main>
+}
