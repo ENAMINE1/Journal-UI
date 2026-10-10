@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, ElementRef, HostListener, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { ApiService, AccessType, JournalResponse } from './api.service';
 
 @Component({
@@ -9,6 +9,7 @@ import { ApiService, AccessType, JournalResponse } from './api.service';
 })
 export class App implements OnInit {
   private readonly api = inject(ApiService);
+  @ViewChild('contentEditor') private contentEditor?: ElementRef<HTMLTextAreaElement>;
   protected readonly username = signal(localStorage.getItem('field-notes-user') || '');
   protected readonly token = signal(localStorage.getItem('field-notes-token'));
   protected readonly authMode = signal<'login' | 'register'>('login');
@@ -22,6 +23,13 @@ export class App implements OnInit {
   protected readonly draftContent = signal('');
   protected readonly draftVisibility = signal<AccessType>('PRIVATE');
   protected readonly isNewNote = signal(false);
+  protected readonly savedTitle = signal('');
+  protected readonly savedContent = signal('');
+  protected readonly savedVisibility = signal<AccessType>('PRIVATE');
+  protected readonly theme = signal(localStorage.getItem('field-notes-theme') || 'meadow');
+  protected readonly isDirty = computed(() => this.draftTitle() !== this.savedTitle()
+    || this.draftContent() !== this.savedContent()
+    || this.draftVisibility() !== this.savedVisibility());
   protected readonly visibleNotes = computed(() => {
     const filter = this.activeFilter();
     const search = this.searchTerm().toLowerCase();
@@ -34,7 +42,29 @@ export class App implements OnInit {
   protected readonly selectedNote = computed(() => this.notes().find((note) => note.id === this.selectedNoteId()) ?? null);
 
   ngOnInit(): void {
+    this.applyTheme(this.theme());
     if (this.token()) this.loadNotes();
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  protected handleKeyboardShortcut(event: KeyboardEvent): void {
+    if (!this.token()) return;
+    const target = event.target as HTMLElement;
+    const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
+    const key = event.key.toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && key === 'n') {
+      event.preventDefault();
+      this.startNewNote();
+    } else if ((event.ctrlKey || event.metaKey) && key === 's') {
+      event.preventDefault();
+      this.saveNote();
+    } else if (!isTyping && key === 'd') {
+      event.preventDefault();
+      this.deleteNote();
+    } else if (!isTyping && key === 's') {
+      event.preventDefault();
+      this.saveNote();
+    }
   }
 
   protected submitAuth(event: Event): void {
@@ -86,6 +116,9 @@ export class App implements OnInit {
     this.draftTitle.set(note.title);
     this.draftContent.set(note.content);
     this.draftVisibility.set(note.accessType);
+    this.savedTitle.set(note.title);
+    this.savedContent.set(note.content);
+    this.savedVisibility.set(note.accessType);
   }
   protected updateSearch(event: Event): void { this.searchTerm.set((event.target as HTMLInputElement).value); }
   protected updateDraft(field: 'title' | 'content' | 'visibility', event: Event): void {
@@ -100,6 +133,9 @@ export class App implements OnInit {
     this.draftTitle.set('');
     this.draftContent.set('');
     this.draftVisibility.set('PRIVATE');
+    this.savedTitle.set('');
+    this.savedContent.set('');
+    this.savedVisibility.set('PRIVATE');
   }
   protected saveNote(): void {
     const title = this.draftTitle().trim();
@@ -109,7 +145,7 @@ export class App implements OnInit {
     const request = selectedId && !this.isNewNote()
       ? this.api.updateJournal(selectedId, title, content, this.draftVisibility())
       : this.api.createJournal(title, content, this.draftVisibility());
-    request.subscribe({ next: (note) => { this.notes.update((notes) => selectedId ? notes.map((item) => item.id === note.id ? note : item) : [note, ...notes]); this.selectNote(note.id); }, error: (error: Error) => this.authError.set(error.message) });
+    request.subscribe({ next: (note) => { this.notes.update((notes) => selectedId ? notes.map((item) => item.id === note.id ? note : item) : [note, ...notes]); this.selectNote(note.id); this.authError.set(''); }, error: (error: Error) => this.authError.set(error.message) });
   }
   protected deleteNote(): void {
     const selectedId = this.selectedNoteId();
@@ -124,5 +160,27 @@ export class App implements OnInit {
     this.notes.set([]);
   }
   protected setAuthMode(mode: 'login' | 'register'): void { this.authMode.set(mode); this.authError.set(''); }
+  protected setTheme(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.theme.set(value);
+    localStorage.setItem('field-notes-theme', value);
+    this.applyTheme(value);
+  }
+  protected applyTheme(value: string): void { document.documentElement.setAttribute('data-theme', value); }
+  protected applyMarkdown(format: string): void {
+    const editor = this.contentEditor?.nativeElement;
+    if (!editor) return;
+    const value = this.draftContent();
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const selected = value.slice(start, end) || 'text';
+    const snippets: Record<string, string> = {
+      bold: `**${selected}**`, italic: `*${selected}*`, heading: `## ${selected}`,
+      bullet: `- ${selected}`, quote: `> ${selected}`, code: `\`${selected}\``, check: `- [ ] ${selected}`
+    };
+    const replacement = snippets[format] || selected;
+    this.draftContent.set(`${value.slice(0, start)}${replacement}${value.slice(end)}`);
+    setTimeout(() => { editor.focus(); editor.setSelectionRange(start + replacement.length, start + replacement.length); });
+  }
   protected formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(value)); }
 }
