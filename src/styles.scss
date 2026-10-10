@@ -9,3 +9,26 @@ html[data-theme='peach'] { --app-font-body: 'IBM Plex Sans', sans-serif; --app-f
 * { box-sizing: border-box; }
 html, body { min-height: 100%; margin: 0; }
 button, input { font: inherit; }
+
+/* Syntax colors apply to Markdown HTML inserted through innerHTML. */
+.markdown-preview .hljs { color: #e8edf2; background: transparent; }
+.markdown-preview .hljs-comment,
+.markdown-preview .hljs-quote { color: #8297a8; font-style: italic; }
+.markdown-preview .hljs-keyword,
+.markdown-preview .hljs-selector-tag,
+.markdown-preview .hljs-literal,
+.markdown-preview .hljs-section { color: #ff7ab2; }
+.markdown-preview .hljs-string,
+.markdown-preview .hljs-attr,
+.markdown-preview .hljs-template-tag { color: #a8e6a3; }
+.markdown-preview .hljs-number,
+.markdown-preview .hljs-symbol,
+.markdown-preview .hljs-bullet { color: #ffc777; }
+.markdown-preview .hljs-title,
+.markdown-preview .hljs-title.function_,
+.markdown-preview .hljs-title.class_ { color: #82cfff; }
+.markdown-preview .hljs-type,
+.markdown-preview .hljs-built_in,
+.markdown-preview .hljs-variable { color: #c7a7ff; }
+.markdown-preview .hljs-meta,
+.markdown-preview .hljs-name { color: #ffab70; }
