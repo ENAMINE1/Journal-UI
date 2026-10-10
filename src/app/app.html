@@ -1,9 +1,10 @@
 @if (!token()) {
   <app-auth-panel [mode]="authMode()" [loading]="loading()" [error]="authError()" (modeChange)="setAuthMode($event)" (submitForm)="submitAuth($event)"></app-auth-panel>
 } @else {
-  <main class="app-shell">
-    <app-sidebar [username]="username()" [notes]="notes()" [activeFilter]="activeFilter()" [theme]="theme()" (newNote)="startNewNote()" (filterChange)="selectFilter($event)" (themeChange)="setTheme($event)" (signOut)="signOut()"></app-sidebar>
-    <app-note-list [notes]="visibleNotes()" [selectedId]="selectedNoteId()" [activeFilter]="activeFilter()" [searchTerm]="searchTerm()" (searchChange)="updateSearch($event)" (noteSelected)="selectNote($event)" (refresh)="loadNotes()"></app-note-list>
-    <app-note-editor [note]="selectedNote()" [title]="draftTitle()" [content]="draftContent()" [visibility]="draftVisibility()" [dirty]="isDirty()" [isNew]="isNewNote()" [error]="authError()" (draftChange)="updateDraft($event)" (save)="saveNote()" (delete)="deleteNote()"></app-note-editor>
+  <main class="app-shell" [class.mobile-edit]="mobileView() === 'edit'" [class.sidebar-open]="sidebarOpen()" [class.notes-collapsed]="notesCollapsed()">
+    <div class="drawer-scrim" aria-hidden="true" (click)="closeSidebar()"></div>
+    <app-sidebar [username]="username()" [notes]="notes()" [activeFilter]="activeFilter()" [theme]="theme()" (newNote)="startNewNote(); closeSidebar()" (filterChange)="selectFilter($event); closeSidebar()" (themeChange)="setTheme($event)" (signOut)="signOut()"></app-sidebar>
+    <app-note-list [notes]="visibleNotes()" [selectedId]="selectedNoteId()" [activeFilter]="activeFilter()" [searchTerm]="searchTerm()" [collapsed]="notesCollapsed()" (toggleCollapse)="toggleNotesPane()" (searchChange)="updateSearch($event)" (noteSelected)="selectNote($event)" (refresh)="loadNotes()" (menuToggle)="openSidebar()"></app-note-list>
+    <app-note-editor [note]="selectedNote()" [title]="draftTitle()" [content]="draftContent()" [visibility]="draftVisibility()" [dirty]="isDirty()" [isNew]="isNewNote()" [deleteArmed]="deleteArmed()" [error]="authError()" (draftChange)="updateDraft($event)" (save)="saveNote()" (delete)="requestDelete()" (back)="showList()"></app-note-editor>
   </main>
 }

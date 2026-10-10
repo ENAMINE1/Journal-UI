@@ -32,6 +32,11 @@ export class App implements OnInit {
   protected readonly savedContent = signal('');
   protected readonly savedVisibility = signal<AccessType>('PRIVATE');
   protected readonly theme = signal<ThemeName>((localStorage.getItem('field-notes-theme') as ThemeName) || 'meadow');
+  protected readonly deleteArmed = signal(false);
+  protected readonly mobileView = signal<'list' | 'edit'>('list');
+  protected readonly sidebarOpen = signal(false);
+  protected readonly notesCollapsed = signal(localStorage.getItem('field-notes-notes-collapsed') === '1');
+  private deleteArmTimer: ReturnType<typeof setTimeout> | null = null;
   protected readonly isDirty = computed(() => this.draftTitle() !== this.savedTitle()
     || this.draftContent() !== this.savedContent()
     || this.draftVisibility() !== this.savedVisibility());
@@ -55,7 +60,7 @@ export class App implements OnInit {
   protected handleKeyboardShortcut(event: KeyboardEvent): void {
     if (!this.token()) return;
     const target = event.target as HTMLElement;
-    const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
+    const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable;
     const key = event.key.toLowerCase();
     if ((event.ctrlKey || event.metaKey) && key === 'n') {
       event.preventDefault();
@@ -65,7 +70,7 @@ export class App implements OnInit {
       this.saveNote();
     } else if (!isTyping && key === 'd') {
       event.preventDefault();
-      this.deleteNote();
+      this.requestDelete();
     } else if (!isTyping && key === 's') {
       event.preventDefault();
       this.saveNote();
@@ -106,16 +111,24 @@ export class App implements OnInit {
     this.api.getJournals().subscribe({
       next: (notes) => {
         this.notes.set(notes);
-        if (notes.length) this.selectNote(this.selectedNoteId() || notes[0].id);
+        if (notes.length) this.hydrateNote(this.selectedNoteId() || notes[0].id);
       },
       error: (error: Error) => this.authError.set(error.message)
     });
   }
 
   protected selectFilter(filter: NoteFilter): void { this.activeFilter.set(filter); }
+  /** User opened a note from the list — navigate to the editor on mobile. */
   protected selectNote(id: string): void {
+    this.hydrateNote(id);
+    this.mobileView.set('edit');
+  }
+
+  /** Load a note's fields into the draft without changing the current view. */
+  private hydrateNote(id: string): void {
     const note = this.notes().find((item) => item.id === id);
     if (!note) return;
+    this.disarmDelete();
     this.selectedNoteId.set(id);
     this.isNewNote.set(false);
     this.draftTitle.set(note.title);
@@ -133,6 +146,8 @@ export class App implements OnInit {
     if (field === 'visibility') this.draftVisibility.set(value as AccessType);
   }
   protected startNewNote(): void {
+    this.disarmDelete();
+    this.mobileView.set('edit');
     this.selectedNoteId.set(null);
     this.isNewNote.set(true);
     this.draftTitle.set('');
@@ -152,6 +167,25 @@ export class App implements OnInit {
       : this.api.createJournal(title, content, this.draftVisibility());
     request.subscribe({ next: (note) => { this.notes.update((notes) => selectedId ? notes.map((item) => item.id === note.id ? note : item) : [note, ...notes]); this.selectNote(note.id); this.authError.set(''); }, error: (error: Error) => this.authError.set(error.message) });
   }
+  /** Two-step delete: first activation arms the button, a second activation within 4s deletes. */
+  protected requestDelete(): void {
+    const selectedId = this.selectedNoteId();
+    if (!selectedId || this.isNewNote()) return;
+    if (this.deleteArmed()) {
+      this.disarmDelete();
+      this.deleteNote();
+      return;
+    }
+    this.deleteArmed.set(true);
+    if (this.deleteArmTimer) clearTimeout(this.deleteArmTimer);
+    this.deleteArmTimer = setTimeout(() => this.disarmDelete(), 4000);
+  }
+
+  private disarmDelete(): void {
+    this.deleteArmed.set(false);
+    if (this.deleteArmTimer) { clearTimeout(this.deleteArmTimer); this.deleteArmTimer = null; }
+  }
+
   protected deleteNote(): void {
     const selectedId = this.selectedNoteId();
     if (!selectedId || this.isNewNote()) return;
@@ -163,6 +197,15 @@ export class App implements OnInit {
     this.token.set(null);
     this.username.set('');
     this.notes.set([]);
+    this.sidebarOpen.set(false);
+    this.mobileView.set('list');
+  }
+  protected openSidebar(): void { this.sidebarOpen.set(true); }
+  protected closeSidebar(): void { this.sidebarOpen.set(false); }
+  protected showList(): void { this.mobileView.set('list'); this.closeSidebar(); }
+  protected toggleNotesPane(): void {
+    this.notesCollapsed.update((value) => !value);
+    localStorage.setItem('field-notes-notes-collapsed', this.notesCollapsed() ? '1' : '0');
   }
   protected setAuthMode(mode: 'login' | 'register'): void { this.authMode.set(mode); this.authError.set(''); }
   protected setTheme(event: Event): void {
