@@ -1,21 +1,26 @@
-import { Component, computed, ElementRef, HostListener, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, computed, HostListener, inject, OnInit, signal, ViewEncapsulation } from '@angular/core';
 import { ApiService, AccessType, JournalResponse } from './api.service';
+import { AuthPanelComponent } from './auth-panel';
+import { NoteEditorComponent } from './note-editor';
+import { NoteListComponent } from './note-list';
+import { SidebarComponent } from './sidebar';
+import { DraftField, NoteFilter, ThemeName } from './models';
 
 @Component({
   selector: 'app-root',
-  imports: [],
+  imports: [AuthPanelComponent, NoteEditorComponent, NoteListComponent, SidebarComponent],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrl: './app.scss',
+  encapsulation: ViewEncapsulation.None
 })
 export class App implements OnInit {
   private readonly api = inject(ApiService);
-  @ViewChild('contentEditor') private contentEditor?: ElementRef<HTMLTextAreaElement>;
   protected readonly username = signal(localStorage.getItem('field-notes-user') || '');
   protected readonly token = signal(localStorage.getItem('field-notes-token'));
   protected readonly authMode = signal<'login' | 'register'>('login');
   protected readonly authError = signal('');
   protected readonly loading = signal(false);
-  protected readonly activeFilter = signal<'All notes' | 'Private' | 'Shared'>('All notes');
+  protected readonly activeFilter = signal<NoteFilter>('All notes');
   protected readonly searchTerm = signal('');
   protected readonly selectedNoteId = signal<string | null>(null);
   protected readonly notes = signal<JournalResponse[]>([]);
@@ -26,7 +31,7 @@ export class App implements OnInit {
   protected readonly savedTitle = signal('');
   protected readonly savedContent = signal('');
   protected readonly savedVisibility = signal<AccessType>('PRIVATE');
-  protected readonly theme = signal(localStorage.getItem('field-notes-theme') || 'meadow');
+  protected readonly theme = signal<ThemeName>((localStorage.getItem('field-notes-theme') as ThemeName) || 'meadow');
   protected readonly isDirty = computed(() => this.draftTitle() !== this.savedTitle()
     || this.draftContent() !== this.savedContent()
     || this.draftVisibility() !== this.savedVisibility());
@@ -107,7 +112,7 @@ export class App implements OnInit {
     });
   }
 
-  protected selectFilter(filter: 'All notes' | 'Private' | 'Shared'): void { this.activeFilter.set(filter); }
+  protected selectFilter(filter: NoteFilter): void { this.activeFilter.set(filter); }
   protected selectNote(id: string): void {
     const note = this.notes().find((item) => item.id === id);
     if (!note) return;
@@ -121,8 +126,8 @@ export class App implements OnInit {
     this.savedVisibility.set(note.accessType);
   }
   protected updateSearch(event: Event): void { this.searchTerm.set((event.target as HTMLInputElement).value); }
-  protected updateDraft(field: 'title' | 'content' | 'visibility', event: Event): void {
-    const value = (event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement).value;
+  protected updateDraft(change: { field: DraftField; value: string }): void {
+    const { field, value } = change;
     if (field === 'title') this.draftTitle.set(value);
     if (field === 'content') this.draftContent.set(value);
     if (field === 'visibility') this.draftVisibility.set(value as AccessType);
@@ -161,26 +166,11 @@ export class App implements OnInit {
   }
   protected setAuthMode(mode: 'login' | 'register'): void { this.authMode.set(mode); this.authError.set(''); }
   protected setTheme(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
+    const value = (event.target as HTMLSelectElement).value as ThemeName;
     this.theme.set(value);
     localStorage.setItem('field-notes-theme', value);
     this.applyTheme(value);
   }
   protected applyTheme(value: string): void { document.documentElement.setAttribute('data-theme', value); }
-  protected applyMarkdown(format: string): void {
-    const editor = this.contentEditor?.nativeElement;
-    if (!editor) return;
-    const value = this.draftContent();
-    const start = editor.selectionStart;
-    const end = editor.selectionEnd;
-    const selected = value.slice(start, end) || 'text';
-    const snippets: Record<string, string> = {
-      bold: `**${selected}**`, italic: `*${selected}*`, heading: `## ${selected}`,
-      bullet: `- ${selected}`, quote: `> ${selected}`, code: `\`${selected}\``, check: `- [ ] ${selected}`
-    };
-    const replacement = snippets[format] || selected;
-    this.draftContent.set(`${value.slice(0, start)}${replacement}${value.slice(end)}`);
-    setTimeout(() => { editor.focus(); editor.setSelectionRange(start + replacement.length, start + replacement.length); });
-  }
   protected formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(value)); }
 }
