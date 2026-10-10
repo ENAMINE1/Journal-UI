@@ -34,3 +34,26 @@ button, input { font: inherit; }
 .markdown-preview .hljs-name { color: #ffab70; }
 .markdown-preview pre { margin: 18px 0; padding: 18px; overflow: auto; border: 1px solid #3d514a; border-radius: 10px; background: #111a18; color: #f5f7f2; box-shadow: 0 10px 24px rgba(28, 36, 34, .18); }
 .markdown-preview pre code { display: block; padding: 0; background: transparent; color: inherit; font: 13px/1.7 var(--app-font-mono, 'Fira Code', monospace); }
+
+html[data-theme='meadow'] .app-shell { background: #f7f5f0; color: #1c2422; }
+html[data-theme='meadow'] .sidebar { background: #eef2ec; }
+html[data-theme='meadow'] .notes-column, html[data-theme='meadow'] .editor-column { background: #fffefa; }
+html[data-theme='meadow'] .markdown-preview pre { background: #253833; border-color: #49665b; }
+
+html[data-theme='midnight'] .app-shell { background: #202a35; color: #edf3f7; font-family: 'Space Grotesk', sans-serif !important; }
+html[data-theme='midnight'] .app-shell h1, html[data-theme='midnight'] .app-shell h2, html[data-theme='midnight'] .app-shell h3, html[data-theme='midnight'] .title-editor { font-family: 'Space Grotesk', sans-serif !important; }
+html[data-theme='midnight'] .sidebar { background: #18212b; border-color: #3b4b5c; }
+html[data-theme='midnight'] .notes-column, html[data-theme='midnight'] .editor-column { background: #273340; border-color: #3b4b5c; }
+html[data-theme='midnight'] .note-card:hover, html[data-theme='midnight'] .note-card.active, html[data-theme='midnight'] .nav-item.active { background: #344353; color: #edf3f7; }
+html[data-theme='midnight'] .search-box { background: #344353; }
+html[data-theme='midnight'] .title-editor, html[data-theme='midnight'] .content-editor, html[data-theme='midnight'] .search-box input { color: #edf3f7; }
+html[data-theme='midnight'] .markdown-preview pre { background: #2c3948; border-color: #617c98; }
+
+html[data-theme='peach'] .app-shell { background: #fff7f0; color: #38251f; font-family: 'IBM Plex Sans', sans-serif !important; }
+html[data-theme='peach'] .app-shell h1, html[data-theme='peach'] .app-shell h2, html[data-theme='peach'] .app-shell h3, html[data-theme='peach'] .title-editor { font-family: 'IBM Plex Sans', sans-serif !important; }
+html[data-theme='peach'] .sidebar { background: #f8e8db; border-color: #e8cdbb; }
+html[data-theme='peach'] .notes-column, html[data-theme='peach'] .editor-column { background: #fffaf6; border-color: #ead7c9; }
+html[data-theme='peach'] .note-card:hover, html[data-theme='peach'] .note-card.active, html[data-theme='peach'] .nav-item.active { background: #fff0e5; color: #38251f; }
+html[data-theme='peach'] .search-box { background: #f9e4d4; }
+html[data-theme='peach'] .title-editor, html[data-theme='peach'] .content-editor, html[data-theme='peach'] .search-box input { color: #38251f; }
+html[data-theme='peach'] .markdown-preview pre { background: #5b4035; border-color: #9b6a53; }
