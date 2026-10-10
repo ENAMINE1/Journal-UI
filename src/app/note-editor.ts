@@ -21,10 +21,6 @@ import { DraftField } from './models';
 })
 export class NoteEditorComponent {
   protected readonly slashMenuOpen = signal(false);
-  protected readonly codeLanguage = signal('typescript');
-  protected readonly languageOptions = [
-    'typescript', 'javascript', 'java', 'sql', 'cpp', 'json', 'yaml', 'openapi', 'bash', 'plaintext'
-  ];
   protected readonly slashCommands = [
     { name: 'Heading', hint: 'Large section title', format: 'heading' },
     { name: 'Bullet list', hint: 'A simple list', format: 'bullet' },
@@ -90,14 +86,12 @@ export class NoteEditorComponent {
     const snippets: Record<string, string> = {
       bold: `**${selected}**`, italic: `*${selected}*`, heading: `## ${selected}`,
       bullet: `- ${selected}`, quote: `> ${selected}`, code: `\`${selected}\``, check: `- [ ] ${selected}`
-      , codeblock: `\n\n\`\`\`${this.codeLanguage()}\n${selected}\n\`\`\``, details: `\n\n::: details Details\n${selected}\n:::`
+      , codeblock: `\n\n\`\`\`\n${selected}\n\`\`\``, details: `\n\n::: details Details\n${selected}\n:::`
     };
     const replacement = snippets[format] || selected;
     this.draftChange.emit({ field: 'content', value: `${this.content.slice(0, start)}${replacement}${this.content.slice(end)}` });
     setTimeout(() => { editor.focus(); editor.setSelectionRange(start + replacement.length, start + replacement.length); });
   }
-
-  setCodeLanguage(event: Event): void { this.codeLanguage.set((event.target as HTMLSelectElement).value); }
 
   applySlashCommand(format: string, editor: HTMLTextAreaElement): void {
     const lineStart = this.content.lastIndexOf('\n') + 1;
